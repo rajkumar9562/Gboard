@@ -36,5 +36,19 @@ class Port1846BuildContractTest {
         assertTrue(compiled.bindingsKotlinSource.contains("Binding ocr_thin_init is unavailable"))
         assertFalse("advanced_voice_typing" in compiled.admittedFeatureIds)
         assertFalse("ai_writing_tools" in compiled.admittedFeatureIds)
+        // Compare actual build output with the selected 18.4.6 port, rather
+        // than with the historical 18.5.4 fixture used by compiler unit tests.
+        val generatedDirectory = Path.of(
+            "build/generated/sources/versionBindings/kotlin/main/dev/jason/" +
+                "gboardpatches/patches/gboard/shared/generated",
+        )
+        assertEquals(
+            compiled.bindingsKotlinSource,
+            Files.readString(generatedDirectory.resolve("GboardVersionBindings.kt")),
+        )
+        assertEquals(
+            compiled.admissionKotlinSource,
+            Files.readString(generatedDirectory.resolve("GboardTargetAdmission.kt")),
+        )
     }
 }
