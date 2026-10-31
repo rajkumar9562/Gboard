@@ -66,6 +66,7 @@ import dev.jason.gboardpatches.patches.gboard.features.manualincognito.gboardMan
 import dev.jason.gboardpatches.patches.gboard.features.manualincognito.gboardManualIncognitoLifecyclePatch
 import dev.jason.gboardpatches.patches.gboard.features.manualincognito.gboardManualIncognitoPolicyPatch
 import dev.jason.gboardpatches.patches.gboard.features.ocr.gboardOcrFeatureMarkerPatch
+import dev.jason.gboardpatches.patches.gboard.features.packagerename.DEFAULT_STANDALONE_GBOARD_DISPLAY_NAME
 import dev.jason.gboardpatches.patches.gboard.features.packagerename.applyGboardApplicationDisplayName
 import dev.jason.gboardpatches.patches.gboard.features.packagerename.gboardPackageRenameResourcePatch
 import dev.jason.gboardpatches.patches.gboard.features.packagerename.isValidGboardAppDisplayName
@@ -109,6 +110,9 @@ private fun gboardPublicResourcePatch(
         default = default,
     ) {
         if (admitted.isNotEmpty()) {
+            // Always require a separate package identity for every published patch.
+            // A successful patch must never silently try to update system Gboard.
+            dependsOn(gboardPackageRenameResourcePatch)
             block()
             GboardContributionWiring.wireAdmitted(featureId, admitted, this)
         }
@@ -806,7 +810,7 @@ val gboardPackageRenamePatch = gboardPublicResourcePatch(
 
     val appDisplayName = stringOption(
         key = "app_display_name",
-        default = "GboardWu",
+        default = DEFAULT_STANDALONE_GBOARD_DISPLAY_NAME,
         values = linkedMapOf(
             "Gboard" to "Gboard",
             "Gboard Dev" to "Gboard Dev",
@@ -820,10 +824,6 @@ val gboardPackageRenamePatch = gboardPublicResourcePatch(
     ) { value ->
         isValidGboardAppDisplayName(value)
     }
-
-    dependsOn(
-        gboardPackageRenameResourcePatch
-    )
 
     finalize {
         applyGboardApplicationDisplayName(displayName = checkNotNull(appDisplayName.value))

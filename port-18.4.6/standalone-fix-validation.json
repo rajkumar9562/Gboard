@@ -1,0 +1,10 @@
+{
+  "status": "static-contracts-pass",
+  "target": "18.4.6.985164140-release-arm64-v8a",
+  "admitted_features": 34,
+  "unsupported_features": 9,
+  "compile_test": "not run",
+  "patch_application_test": "not run",
+  "device_test": "not run",
+  "java_subset_compile_and_metadata_tests": "passed; full Android build still untested"
+}

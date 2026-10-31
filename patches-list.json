@@ -1,5 +1,5 @@
 {
-  "version": "4.0.0-port1846.2",
+  "version": "4.0.0-port1846.3",
   "patches": [
     {
       "name": "Add Gboard Signature Bypass",
@@ -270,7 +270,7 @@
           "description": "",
           "required": true,
           "type": "kotlin.String",
-          "default": "GboardWu",
+          "default": "Gboard Mod",
           "values": {
             "Gboard": "Gboard",
             "Gboard Dev": "Gboard Dev",

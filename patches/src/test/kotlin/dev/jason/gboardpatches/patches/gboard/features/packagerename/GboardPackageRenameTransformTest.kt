@@ -51,6 +51,26 @@ class GboardPackageRenameTransformTest {
     }
 
     @Test
+    fun `standalone fallback name only applies when no user-selected name exists`() {
+        val manifest = loadManifest()
+        val resources = displayNameResources()
+
+        assertTrue(needsDefaultStandaloneGboardDisplayName(manifest))
+        applyGboardApplicationDisplayName(manifest, "Gboard Mod", resources)
+        assertFalse(needsDefaultStandaloneGboardDisplayName(manifest))
+        assertEquals("\"Gboard Mod\"", elements(resources, "string").single {
+            it.getAttribute("name") == "gboard_patches_app_display_name"
+        }.textContent)
+
+        // An explicit user choice must not be overwritten by the shared dependency.
+        applyGboardApplicationDisplayName(manifest, "My Custom Keyboard", resources)
+        assertFalse(needsDefaultStandaloneGboardDisplayName(manifest))
+        assertEquals("\"My Custom Keyboard\"", elements(resources, "string").single {
+            it.getAttribute("name") == "gboard_patches_app_display_name"
+        }.textContent)
+    }
+
+    @Test
     fun `application display name uses a resource in namespace unaware cli documents`() {
         val manifest = parse(readFixtureBytes(MANIFEST_FIXTURE), namespaceAware = false)
         val application = elements(manifest, "application").single()

@@ -9,11 +9,33 @@ against the supplied APKM. Compilation, Morphe patch application, installation,
 and Android runtime behavior have **not** been verified. No compiled `.mpp` or
 patched APK is included. This ZIP is not installable on Android.
 
-Revision: `4.0.0-port1846.2`. The Java metadata subset and regression checks passed; the complete Android build remains untested.
+Revision: `4.0.0-port1846.3`. The Java metadata subset and regression checks passed; the complete Android build remains untested.
 
 See [PORT-1846.md](PORT-1846.md) for the exact status, features and build steps.
 Upstream documentation is preserved in [README-UPSTREAM.md](README-UPSTREAM.md).
 Upstream code and GPL-3.0 license notices are retained; this is an unofficial port.
+
+## Standalone Gboard Mod (original Gboard safe)
+
+**Important fix:** All enabled public patches now depend on the **Package Rename**
+resource transform, even when the user does not explicitly select the Package Rename
+option. This prevents a successfully patched APK from retaining the official Gboard
+package identity. The default app label is **Gboard Mod**. If Package Rename is
+selected and a different display name is chosen, that custom label is retained.
+
+- Stock Gboard: `com.google.android.inputmethod.latin` (do not uninstall)
+- Gboard Mod: `dev.jason.com.google.android.inputmethod.latin` (install separately)
+
+Rebuild the `.mpp` from this ZIP; do not reuse the previous compiled patch bundle.
+Import the new `.mpp` in Morphe and re-patch the original supported 18.4.6 input.
+Before installing, inspect the *final* output APK's manifest/package ID; it MUST
+be `dev.jason.com.google.android.inputmethod.latin` and not the original package.
+Only a genuinely installable **single/universal APK** with this package name can
+coexist; original-package split APKs must not be mixed into a renamed install set.
+A `base.apk` alone is not guaranteed to include all required ABI/configuration splits.
+If patching or rebuilding a complete standalone APK fails, do not uninstall the
+system Gboard. This repository still does not contain a built APK and does not
+claim device installation is verified.
 
 ## GitHub par build karna
 

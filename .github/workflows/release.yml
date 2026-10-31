@@ -33,7 +33,12 @@ jobs:
       - name: Make wrapper executable
         run: chmod +x gradlew
       - name: Run binding compiler and port contract tests
-        run: ./gradlew :patches:test --tests 'dev.jason.gboardpatches.tools.bindings.*' --no-daemon
+        run: |
+          ./gradlew :patches:test \
+            --tests 'dev.jason.gboardpatches.tools.bindings.*' \
+            --tests 'dev.jason.gboardpatches.patches.gboard.registry.GboardStandaloneInstallPatchContractTest' \
+            --tests 'dev.jason.gboardpatches.patches.gboard.features.packagerename.GboardPackageRenameTransformTest' \
+            --no-daemon
       - name: Build patch bundle and regenerate metadata
         # The target-specific compiler tests ran above. Remaining upstream tests
         # contain 18.0.3/18.5.4 fixtures and do not validate this port.

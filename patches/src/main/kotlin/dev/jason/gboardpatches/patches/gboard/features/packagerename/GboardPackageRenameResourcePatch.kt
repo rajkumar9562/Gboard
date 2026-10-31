@@ -29,7 +29,10 @@ internal val gboardPackageRenameResourcePatch = resourcePatch(
         "將套件名稱改成可共存安裝的自訂值；僅支援單一 APK 產物，不可搭配原套件名稱的 split APK。"
 ) {
     finalize {
+        // This dependency runs even if the optional public "Package Rename" UI patch
+        // was unchecked. Make the output a separately installable keyboard in all cases.
         applyManifestPackageOverride()
+        ensureStandaloneGboardDisplayName()
     }
 }
 
@@ -72,6 +75,24 @@ internal fun isValidGboardAppDisplayName(value: String?): Boolean {
     return value.none { character ->
         character.isISOControl() || character == '\u2028' || character == '\u2029'
     }
+}
+
+internal const val DEFAULT_STANDALONE_GBOARD_DISPLAY_NAME = "Gboard Mod"
+
+// The public Package Rename option may already have written a custom label during
+// its finalize callback. Morphe finalizes dependencies last, so preserve it.
+context(context: ResourcePatchContext)
+private fun ensureStandaloneGboardDisplayName() = with(context) {
+    val needsDefaultName = document("AndroidManifest.xml").use(::needsDefaultStandaloneGboardDisplayName)
+    if (needsDefaultName) {
+        applyGboardApplicationDisplayName(DEFAULT_STANDALONE_GBOARD_DISPLAY_NAME)
+    }
+}
+
+internal fun needsDefaultStandaloneGboardDisplayName(manifestDocument: Document): Boolean {
+    val applications = manifestDocument.documentElement.childElements("application").toList()
+    check(applications.size == 1) { "Expected exactly one Gboard application" }
+    return applications.single().androidAttribute("label")?.value != APP_DISPLAY_NAME_RESOURCE_REF
 }
 
 private const val APP_DISPLAY_NAME_RESOURCE = "gboard_patches_app_display_name"
