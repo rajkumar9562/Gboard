@@ -1,0 +1,50 @@
+name: Build experimental Gboard 18.4.6 port
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_ACTOR: ${{ secrets.MORPHE_PACKAGES_USER || github.repository_owner }}
+      GITHUB_TOKEN: ${{ secrets.MORPHE_PACKAGES_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check Morphe package credentials
+        shell: bash
+        run: |
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo 'Set MORPHE_PACKAGES_TOKEN with access to the Morphe GitHub Packages registry.'
+            exit 1
+          fi
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Cache Gradle
+        uses: burrunan/gradle-cache-action@v3
+      - name: Validate target contracts
+        run: python3 tools/port1846/verify_port.py --java-tests --report port-18.4.6/ci-contract-report.json
+      - name: Make wrapper executable
+        run: chmod +x gradlew
+      - name: Run binding compiler and port contract tests
+        run: ./gradlew :patches:test --tests 'dev.jason.gboardpatches.tools.bindings.*' --no-daemon
+      - name: Build patch bundle and regenerate metadata
+        # The target-specific compiler tests ran above. Remaining upstream tests
+        # contain 18.0.3/18.5.4 fixtures and do not validate this port.
+        run: ./gradlew :patches:buildAndroid :patches:generatePatchesList -x test --no-daemon
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Gboard-18.4.6-experimental-mpp
+          if-no-files-found: error
+          path: |
+            patches/build/libs/*.mpp
+            patches-list.json
+            port-18.4.6/ci-contract-report.json
+            patches/build/test-results/test/*.xml
