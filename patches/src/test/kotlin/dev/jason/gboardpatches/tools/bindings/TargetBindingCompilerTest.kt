@@ -184,7 +184,27 @@ internal object GboardVersionBindings {
             requiredKeys = profileBindings.keySet(),
             bindingKinds = fullRequirements.bindingKinds,
         )
-        val generated = Files.readString(GENERATED_BINDINGS_PATH, StandardCharsets.UTF_8)
+        // Generate the historical fixture independently: the real build can use
+        // paired PortBundle overrides for a different Gboard version.
+        val outputDirectory = Files.createTempDirectory("gboard-1854-bindings")
+        val generated = try {
+            val bindingsOutput = outputDirectory.resolve("GboardVersionBindings.kt")
+            val admissionOutput = outputDirectory.resolve("GboardTargetAdmission.kt")
+            TargetBindingGenerator.main(
+                arrayOf(
+                    BINDINGS_PATH.toString(),
+                    PRODUCT_CATALOG_PATH.toString(),
+                    "-",
+                    bindingsOutput.toString(),
+                    admissionOutput.toString(),
+                ),
+            )
+            Files.readString(bindingsOutput, StandardCharsets.UTF_8)
+        } finally {
+            Files.deleteIfExists(outputDirectory.resolve("GboardVersionBindings.kt"))
+            Files.deleteIfExists(outputDirectory.resolve("GboardTargetAdmission.kt"))
+            Files.deleteIfExists(outputDirectory)
+        }
 
         val projection = TargetBindingCompiler.compile(profile, requirements)
         assertEquals("18.5.4", projection.targetVersion)
@@ -302,9 +322,5 @@ internal object GboardVersionBindings {
             Path.of("src/main/resources/gboard/gboard-version-bindings.schema.json")
         val PRODUCT_CATALOG_PATH =
             Path.of("src/main/resources/gboard/gboard-port-product-catalog.json")
-        val GENERATED_BINDINGS_PATH = Path.of(
-            "build/generated/sources/versionBindings/kotlin/main/dev/jason/" +
-                "gboardpatches/patches/gboard/shared/generated/GboardVersionBindings.kt",
-        )
     }
 }
